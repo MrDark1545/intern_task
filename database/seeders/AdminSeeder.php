@@ -18,12 +18,11 @@ class AdminSeeder extends Seeder
     {
         // Create Admin User
         $user = User::create([
-            'first_name'    => 'Super',
-            'last_name'     => 'Admin',
+            'first_name'    => 'usama',
+            'last_name'     => 'yasin',
             'email'         =>  'admin@admin.com',
-            'mobile_number' =>  '9028187696',
-            'password'      =>  Hash::make('Admin@123#'),
-            'role_id'       => 1
-        ]);
+            'mobile_number' =>  '03446410422',
+            'password'      =>  Hash::make('Admin'),
+       ]);
     }
 }

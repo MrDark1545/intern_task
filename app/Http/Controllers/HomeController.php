@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\stock;
 use Illuminate\Http\Request;
 use App\Rules\MatchOldPassword;
 use Illuminate\Support\Facades\DB;
@@ -28,86 +29,32 @@ class HomeController extends Controller
      */
     public function index()
     {
-        return view('home');
-    }
+        // similar emails 
+        $emailexists = DB::table('users')
+        ->join('usersemail', 'users.email', '=', 'usersemail.email')
+        ->count();
+    
+ //   echo 'Total Similar Emails: ' . $emailexists;
 
-    /**
-     * User Profile
-     * @param Nill
-     * @return View Profile
-     * @author Shani Singh
-     */
-    public function getProfile()
-    {
-        return view('profile');
-    }
+    $emailDoesNotExistCount = DB::table('users')
+    ->leftJoin('usersemail', 'users.email', '=', 'usersemail.email')
+    ->whereNull('usersemail.email')
+    ->count();
 
-    /**
-     * Update Profile
-     * @param $profileData
-     * @return Boolean With Success Message
-     * @author Shani Singh
-     */
-    public function updateProfile(Request $request)
-    {
-        #Validations
-        $request->validate([
-            'first_name'    => 'required',
-            'last_name'     => 'required',
-            'mobile_number' => 'required|numeric|digits:10',
-        ]);
+   // echo 'Total non-similar Emails: ' . $emailDoesNotExistCount;
 
-        try {
-            DB::beginTransaction();
-            
-            #Update Profile Data
-            User::whereId(auth()->user()->id)->update([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'mobile_number' => $request->mobile_number,
-            ]);
+    $duplicateCount = DB::table('usersemail')
+    ->selectRaw('COUNT(*) - COUNT(DISTINCT email) as duplicate_count')
+    ->value('duplicate_count');
 
-            #Commit Transaction
-            DB::commit();
+//   echo "Total duplicate records: $duplicateCount";
 
-            #Return To Profile page with success
-            return back()->with('success', 'Profile Updated Successfully.');
-            
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return back()->with('error', $th->getMessage());
-        }
-    }
+$data = [
+    'existing_mails' => $emailexists,
+    'non_existing_mails' => $emailDoesNotExistCount,
+    'duplicate_emails' => $duplicateCount,
+];
+return view('home', $data);
+}
 
-    /**
-     * Change Password
-     * @param Old Password, New Password, Confirm New Password
-     * @return Boolean With Success Message
-     * @author Shani Singh
-     */
-    public function changePassword(Request $request)
-    {
-        $request->validate([
-            'current_password' => ['required', new MatchOldPassword],
-            'new_password' => ['required'],
-            'new_confirm_password' => ['same:new_password'],
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            #Update Password
-            User::find(auth()->user()->id)->update(['password'=> Hash::make($request->new_password)]);
-            
-            #Commit Transaction
-            DB::commit();
-
-            #Return To Profile page with success
-            return back()->with('success', 'Password Changed Successfully.');
-            
-        } catch (\Throwable $th) {
-            DB::rollBack();
-            return back()->with('error', $th->getMessage());
-        }
-    }
 }
