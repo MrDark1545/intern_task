@@ -6,6 +6,8 @@
 ```bash
 git clone https://github.com/MrDark1545/intern_task.git
 cd intern_task
+git checkout master
+
 ```
 Login credientilas
 ```bash
